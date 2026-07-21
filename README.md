@@ -1,96 +1,96 @@
-# Password-Strength-Analyzer
+# 🔐 Password Strength Analyzer
 
-A browser‑based tool that evaluates password strength in real time, estimates entropy and crack time, flags weak patterns, and generates secure alternatives—all without sending any data to a server.
+A lightweight, client‑side tool that evaluates password strength in real time, estimates entropy and crack time, warns about weak patterns, and generates secure alternatives—**without ever sending your data anywhere**.
 
-Features
-Real‑time analysis – Instantly inspect any password as you type.
+![Screenshot of the generator and vault features](https://github.com/user-attachments/assets/08681463-6a2b-429a-8138-563e9632171f)
+![Screenshot of the Password Strength Analyzer in action](https://github.com/user-attachments/assets/ccf72c90-b0e1-4aa5-a67c-41bdd2fa8931)
 
-Entropy & crack time – Calculates character‑pool entropy and estimates how long an offline attacker would need to guess it (at 10 billion guesses per second).
+---
 
-Detailed checklist – Shows passes/fails for length, character diversity, common passwords, keyboard sequences, and repeated characters.
+## ✨ Features
 
-Visual dial – A clear, colour‑coded gauge that reacts to password strength.
+- **Real‑time analysis** – See strength, entropy, and crack time update as you type.
+- **Detailed checklist** – Pass/fail for length, character variety, common passwords, keyboard sequences, and repeated chars.
+- **Visual dial** – A color‑coded gauge that instantly shows how strong your password is.
+- **“Remember” vault** – Stores only SHA‑256 hashes locally. Alerts you if you reuse a password you've previously stored.
+- **Secure generators** – Creates cryptographically strong random passwords (16 chars) and memorable passphrases (5 words) using `crypto.getRandomValues()`.
+- **100% offline** – No external requests, no tracking, no server‑side processing. Everything runs in your browser.
 
-“Remember” vault – Stores SHA‑256 hashes of passwords you choose to keep on your device. The tool warns you if you reuse a previously stored password (without ever seeing the original).
+---
 
-Random password generator – Produces cryptographically strong random passwords (16 characters) and passphrases (5 words) using the browser’s native crypto.getRandomValues().
+## 🚀 How to Use
 
-Local only – No network requests, no tracking, no external dependencies. Everything runs in your browser.
+1. Open `index.html` in any modern browser (Chrome, Firefox, Edge, Safari).
+2. Type a password into the input field.
+3. Instantly see:
+   - Entropy (bits)
+   - Estimated crack time (at 10 billion guesses/sec)
+   - A strength category (Very Weak → Very Strong)
+   - A checklist of what's good and what isn't.
+4. Click **“Remember this password”** to store its hash locally. The tool will warn you if you ever type that same password again.
+5. Expand the **“Stronger alternatives”** section to generate a new random password or passphrase with one click.
 
-How It Works
-Strength Calculation
-Entropy is estimated as:
+---
+
+## ⚙️ How It Works
+
+### Entropy & Crack Time
+
+The tool estimates entropy as:
+
 entropy = length × log₂(character_pool_size)
 
-The following penalties are applied:
 
-Common passwords – If the password appears in a built‑in list of 100 common passwords, entropy is capped at 8 bits.
+Then applies penalties for:
 
-Keyboard sequences – Detects runs like 1234, qwerty, abcd, etc., and subtracts 8 bits.
+- **Common passwords** – if the password is in a built‑in list of ~100 common ones, entropy is capped at 8 bits.
+- **Keyboard sequences** – e.g., `qwerty`, `1234`, `abcd` → subtracts 8 bits.
+- **Repeated characters** – three or more in a row (e.g., `aaa`) → subtracts 6 bits.
 
-Repeated characters – Three or more identical characters in a row (e.g., aaa) subtracts 6 bits.
+Crack time is calculated assuming an offline attacker can try **10 billion guesses per second**—a realistic figure for a leaked, poorly‑hashed database.
 
-The final entropy determines the strength category:
+### The Local Vault
 
-< 28 bits → Very weak
+- When you click **“Remember this password”**, the tool computes the SHA‑256 hash and stores it in `localStorage`.
+- The plaintext password is **never saved**.
+- On every new input, the tool hashes the password and checks it against the vault. If there's a match, it shows a reuse warning.
 
-28 – 39 → Weak
+### Password Generation
 
-40 – 59 → Fair
+- **Random password** – 16 characters with at least one uppercase, one lowercase, one digit, and one symbol. Ambiguous characters (like `O` and `l`) are excluded.
+- **Passphrase** – 5 words from a 200‑word list, with a random digit and symbol inserted, and the first word capitalised (e.g., `Anchor‑ember‑glacier3#`). High entropy and easier to remember.
 
-60 – 79 → Strong
+All randomness comes from the Web Crypto API (`crypto.getRandomValues()`).
 
-≥ 80 → Very strong
+---
 
-Crack time assumes an attacker can try 10 billion guesses per second, a typical rate for offline hashing attacks.
+## 🛡️ Privacy & Security
 
-The “Vault”
-When you click “Remember this password”, the tool computes the SHA‑256 hash of the current password and stores it in your browser’s localStorage (or an in‑memory fallback if localStorage is unavailable). The plaintext password is never saved.
+- **Zero data leaves your device** – no analytics, no telemetry, no external network calls.
+- **Plaintext never stored** – the vault contains only irreversible SHA‑256 hashes.
+- **Cryptographically secure randomness** – all generated passwords use `crypto.getRandomValues()`.
+- **Fully transparent** – the entire application is a single, self‑contained HTML file. Feel free to inspect the source.
 
-Later, when you type a password, the tool hashes it and checks whether that hash exists in the vault. If it does, you’ll see a reuse warning, helping you avoid password recycling.
+---
 
-Password Generation
-Two generation modes are available:
+## 📁 Tech Stack
 
-Random password – 16 characters, including at least one uppercase, one lowercase, one digit, and one symbol. The character set excludes ambiguous characters like O (zero‑risk) and 1 (looks like l).
+- Vanilla JavaScript (ES6)
+- Web Crypto API (`crypto.subtle`, `crypto.getRandomValues`)
+- `localStorage` (with fallback to in‑memory storage)
+- Google Fonts (loaded on first visit; no tracking)
 
-Passphrase – 5 words from a 200‑word list, with a random digit and symbol inserted, and the first word capitalised (e.g., Anchor‑ember‑glacier3#). This results in high entropy and better memorability.
+No frameworks, no build tools, no dependencies.
 
-All randomness comes from the Web Crypto API (crypto.getRandomValues), which is cryptographically secure.
+---
 
-Usage
-Open the HTML file in any modern browser (Chrome, Firefox, Edge, Safari, etc.). No internet connection is required after the initial load.
 
-Type a password into the input field.
+## 📄 License
 
-Watch the dial, verdict, and checklist update.
+This project is open source. Feel free to use, modify, and distribute it. (You can add your preferred license, e.g., MIT.)
 
-Expand the “Stronger alternatives” section to generate a new password/passphrase.
+---
 
-Click “Remember this password” to add its hash to the vault for reuse detection.
+## 🤝 Contributing
 
-Click “Clear vault” to erase all stored hashes.
-
-Privacy & Security
-Zero data leaves your device – No analytics, no telemetry, no external requests.
-
-Plaintext never stored – The vault only contains irreversible SHA‑256 hashes.
-
-Cryptographically secure randomness – All generated passwords use the browser’s built‑in random source.
-
-Transparent code – The entire application is a single, self‑contained HTML file. You are encouraged to inspect the code.
-
-Dependencies
-None. The tool uses only standard browser APIs:
-
-crypto.subtle.digest (SHA‑256)
-
-crypto.getRandomValues
-
-localStorage (optional, fallback to memory)
-
-License
-This tool is provided as open source. You may use, modify, and distribute it freely. (No explicit license is included; you are welcome to add your own.)
-
-Contributing
-Feel free to open issues or pull requests on the repository hosting this file. Contributions that improve the entropy estimation, expand the wordlist, or add more attack models are especially welcome.
+Contributions are welcome! If you find a bug, have a suggestion, or want to expand the wordlist / common‑password list, please open an issue or submit a pull request.
