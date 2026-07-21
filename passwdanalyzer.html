@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Password Strength Analyzer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#11181F;
+    --ink-2:#182430;
+    --panel:#1C2833;
+    --paper:#EDE7D8;
+    --paper-dim:#B9B2A0;
+    --brass:#C79A44;
+    --brass-dim:#8A6D33;
+    --rust:#B3492E;
+    --verdigris:#4F9484;
+    --hairline:rgba(237,231,216,0.14);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--paper);
+    font-family:'IBM Plex Sans', sans-serif;
+    line-height:1.55;
+  }
+  .wrap{
+    max-width:760px;
+    margin:0 auto;
+    padding:48px 24px 80px;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--brass);
+    margin:0 0 10px;
+  }
+  h1{
+    font-family:'Special Elite', monospace;
+    font-weight:400;
+    font-size:34px;
+    letter-spacing:0.01em;
+    margin:0 0 14px;
+    color:var(--paper);
+  }
+  .subhead{
+    font-size:15px;
+    color:var(--paper-dim);
+    max-width:52ch;
+    margin:0 0 40px;
+  }
+  h2{
+    font-family:'Special Elite', monospace;
+    font-weight:400;
+    font-size:20px;
+    color:var(--paper);
+    margin:0 0 4px;
+  }
+  .section-note{
+    font-size:13px;
+    color:var(--paper-dim);
+    margin:0 0 20px;
+  }
+  section{
+    margin-bottom:48px;
+  }
+  .divider{
+    border:none;
+    border-top:1px solid var(--hairline);
+    margin:0 0 40px;
+  }
+  label{
+    display:block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--paper-dim);
+    margin-bottom:10px;
+  }
+  .input-wrap{
+    position:relative;
+    display:flex;
+    align-items:stretch;
+    border:1px solid var(--hairline);
+    background:var(--ink-2);
+    border-radius:2px;
+  }
+  input[type="password"], input[type="text"]{
+    flex:1;
+    background:transparent;
+    border:none;
+    outline:none;
+    color:var(--paper);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:17px;
+    padding:14px 16px;
+    letter-spacing:0.02em;
+  }
+  input::placeholder{ color:var(--paper-dim); opacity:0.6; }
+  .toggle-btn{
+    background:transparent;
+    border:none;
+    border-left:1px solid var(--hairline);
+    color:var(--paper-dim);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    padding:0 18px;
+    cursor:pointer;
+  }
+  .toggle-btn:hover{ color:var(--paper); }
+
+  .dial-panel{
+    margin-top:32px;
+    display:flex;
+    align-items:center;
+    gap:28px;
+    flex-wrap:wrap;
+  }
+  .dial-svg{ width:220px; height:130px; flex-shrink:0; }
+  .needle{ transform-origin:110px 110px; transition:transform 0.35s cubic-bezier(.4,0,.2,1); }
+  .verdict-block{ min-width:200px; }
+  .verdict{
+    font-family:'Special Elite', monospace;
+    font-size:22px;
+    margin:0 0 6px;
+  }
+  .crack-time{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    color:var(--paper-dim);
+  }
+  .crack-time strong{ color:var(--paper); font-weight:500; }
+
+  .stamp-list{
+    margin-top:36px;
+    border-top:1px solid var(--hairline);
+  }
+  .stamp-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 0;
+    border-bottom:1px solid var(--hairline);
+    font-size:14px;
+  }
+  .stamp-row .label{ color:var(--paper); text-transform:none; letter-spacing:0; font-family:'IBM Plex Sans', sans-serif; font-size:14px; margin:0; }
+  .stamp{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.1em;
+    padding:3px 9px;
+    border-radius:2px;
+    border:1px solid currentColor;
+  }
+  .stamp.pass{ color:var(--verdigris); }
+  .stamp.fail{ color:var(--rust); }
+
+  .readout-grid{
+    margin-top:28px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:1px;
+    background:var(--hairline);
+    border:1px solid var(--hairline);
+  }
+  .readout-cell{
+    background:var(--ink-2);
+    padding:14px 16px;
+  }
+  .readout-cell .k{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--paper-dim);
+    margin-bottom:6px;
+  }
+  .readout-cell .v{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:18px;
+    color:var(--brass);
+  }
+
+  .vault-box{
+    margin-top:28px;
+    border:1px solid var(--hairline);
+    padding:18px 20px;
+    background:var(--panel);
+  }
+  .vault-box p{ font-size:13px; color:var(--paper-dim); margin:0 0 14px; }
+  .reuse-warning{
+    font-size:13px;
+    color:var(--rust);
+    margin:0 0 14px;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .btn-row{ display:flex; gap:10px; flex-wrap:wrap; }
+  button.action{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    background:transparent;
+    color:var(--paper);
+    border:1px solid var(--brass-dim);
+    padding:10px 16px;
+    cursor:pointer;
+    border-radius:2px;
+  }
+  button.action:hover{ border-color:var(--brass); color:var(--brass); }
+  button.action.primary{ border-color:var(--brass); color:var(--brass); }
+  #vaultStatus{ margin-top:12px; font-size:12px; color:var(--verdigris); font-family:'IBM Plex Mono', monospace; min-height:16px; }
+
+  .suggestion-card{
+    border:1px solid var(--hairline);
+    background:var(--ink-2);
+    padding:16px 18px;
+    margin-bottom:12px;
+  }
+  .suggestion-card .tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--brass);
+    margin-bottom:8px;
+  }
+  .suggestion-value{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:16px;
+    color:var(--paper);
+    word-break:break-all;
+    margin-bottom:10px;
+  }
+  .suggestion-meta{
+    font-size:12px;
+    color:var(--paper-dim);
+  }
+  .copy-btn{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    background:transparent;
+    border:1px solid var(--hairline);
+    color:var(--paper-dim);
+    padding:6px 12px;
+    cursor:pointer;
+    margin-top:10px;
+    border-radius:2px;
+  }
+  .copy-btn:hover{ color:var(--paper); border-color:var(--paper-dim); }
+
+  footer.notes{
+    margin-top:56px;
+    padding-top:20px;
+    border-top:1px solid var(--hairline);
+    font-size:12px;
+    color:var(--paper-dim);
+  }
+  footer.notes p{ margin:0 0 8px; }
+  a{ color:var(--brass); }
+
+  @media (max-width:520px){
+    h1{ font-size:26px; }
+    .dial-panel{ flex-direction:column; align-items:flex-start; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Field manual — section 7</p>
+  <h1>Password Strength Analyzer</h1>
+  <p class="subhead">Test how a password holds up against guessing, see the arithmetic behind the verdict, and generate something sturdier if it doesn't.</p>
+
+  <section>
+    <label for="pw">Password to test</label>
+    <div class="input-wrap">
+      <input type="password" id="pw" autocomplete="off" spellcheck="false" placeholder="Type a password to inspect it" />
+      <button class="toggle-btn" id="toggleVis" type="button">Show</button>
+    </div>
+
+    <div class="dial-panel">
+      <svg class="dial-svg" viewBox="0 0 220 130">
+        <path d="M 15 110 A 95 95 0 0 1 205 110" fill="none" stroke="var(--hairline)" stroke-width="14"/>
+        <path id="dialFill" d="M 15 110 A 95 95 0 0 1 205 110" fill="none" stroke="var(--rust)" stroke-width="14" stroke-dasharray="0 300" stroke-linecap="round"/>
+        <g class="needle" id="needle">
+          <line x1="110" y1="110" x2="110" y2="30" stroke="var(--paper)" stroke-width="3"/>
+          <circle cx="110" cy="110" r="7" fill="var(--paper)"/>
+        </g>
+        <circle cx="15" cy="110" r="2.5" fill="var(--paper-dim)"/>
+        <circle cx="110" cy="15" r="2.5" fill="var(--paper-dim)"/>
+        <circle cx="205" cy="110" r="2.5" fill="var(--paper-dim)"/>
+      </svg>
+      <div class="verdict-block">
+        <p class="verdict" id="verdict" style="color:var(--paper-dim);">Awaiting input</p>
+        <p class="crack-time" id="crackTime">Type a password above to begin.</p>
+        <p id="reuseWarning" class="reuse-warning" style="display:none;"></p>
+      </div>
+    </div>
+
+    <div class="stamp-list" id="checklist"></div>
+
+    <div class="readout-grid">
+      <div class="readout-cell">
+        <div class="k">Character pool</div>
+        <div class="v" id="poolSize">0</div>
+      </div>
+      <div class="readout-cell">
+        <div class="k">Entropy estimate</div>
+        <div class="v" id="entropyBits">0 bits</div>
+      </div>
+    </div>
+
+    <div class="vault-box">
+      <p>The vault below stores only a SHA-256 hash of a password you choose to remember, kept on this device, so the tool can flag if you reuse it later. The plain text is never saved.</p>
+      <div class="btn-row">
+        <button class="action" id="rememberBtn" type="button">Remember this password</button>
+        <button class="action" id="clearVaultBtn" type="button">Clear vault (<span id="vaultCount">0</span> stored)</button>
+      </div>
+      <div id="vaultStatus"></div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <section>
+    <h2>Stronger alternatives</h2>
+    <p class="section-note">Generated locally with the browser's cryptographic random number source, never sent anywhere.</p>
+    <div class="btn-row" style="margin-bottom:20px;">
+      <button class="action primary" id="genRandom" type="button">Generate random password</button>
+      <button class="action primary" id="genPassphrase" type="button">Generate passphrase</button>
+    </div>
+    <div id="suggestionsList"></div>
+  </section>
+
+  <footer class="notes">
+    <p>Entropy here is estimated as length × log2(character pool), then penalized for dictionary matches, keyboard runs, and repeated characters — the standard classroom approximation, not a full guessing-model attack.</p>
+    <p>Crack time assumes an offline attacker hashing at 10 billion guesses per second, a realistic figure for a leaked, poorly-hashed database.</p>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+
+  var COMMON_PASSWORDS = ["123456","password","123456789","12345678","12345","qwerty","abc123","password1",
+    "111111","123123","1234567","admin","letmein","welcome","monkey","login","princess","qwerty123",
+    "solo","master","dragon","passw0rd","football","iloveyou","123321","000000","qazwsx","michael",
+    "shadow","superman","696969","1q2w3e4r","trustno1","batman","access","flower","hottie","freedom",
+    "whatever","jordan23","harley","password123","1qaz2wsx","zaq1zaq1","starwars","hello","charlie",
+    "aa123456","donald","sunshine","iloveu","121212","666666","asdfghjkl","liverpool","chelsea","secret",
+    "666666","987654321","qwertyuiop","1111111","5201314","asdasd","987654321","000000","1111","2222"];
+
+  var SEQUENCES = ["abcdefghijklmnopqrstuvwxyz","qwertyuiop","asdfghjkl","zxcvbnm","0123456789"];
+
+  var WORDLIST = ["anchor","ember","glacier","harbor","ivory","jasper","kettle","lantern","meadow","nectar",
+    "orbit","pebble","quartz","ripple","satin","timber","umbrella","velvet","willow","xenon","yonder","zephyr",
+    "amber","brisk","candle","dusk","echo","forge","granite","hollow","ink","juniper","kestrel","lumen",
+    "marrow","nomad","opal","plume","quill","raven","spruce","thistle","undertow","vapor","wander","yarrow",
+    "acorn","bramble","copper","driftwood","ferry","gable","hazel","indigo","jetty","knoll","larch","mica",
+    "nettle","onyx","paddock","quiver","ridge","salt","tundra","urchin","vale","wick","yeast","zinc",
+    "basin","cider","dune","fable","gorse","heron","islet","juniper","keel","loft","moor","nook",
+    "osier","pier","quay","reed","sable","teal","umber","vine","weir","yew"];
+
+  function sha256Hex(str){
+    var enc = new TextEncoder().encode(str);
+    return crypto.subtle.digest('SHA-256', enc).then(function(buf){
+      return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+    });
+  }
+
+  function secureRandomInt(max){
+    var arr = new Uint32Array(1);
+    crypto.getRandomValues(arr);
+    return arr[0] % max;
+  }
+
+  function analyze(password){
+    var length = password.length;
+    var hasLower = /[a-z]/.test(password);
+    var hasUpper = /[A-Z]/.test(password);
+    var hasDigit = /[0-9]/.test(password);
+    var hasSymbol = /[^a-zA-Z0-9]/.test(password);
+
+    var pool = 0;
+    if (hasLower) pool += 26;
+    if (hasUpper) pool += 26;
+    if (hasDigit) pool += 10;
+    if (hasSymbol) pool += 33;
+    if (pool === 0) pool = 1;
+
+    var entropy = length * Math.log2(pool);
+
+    var lower = password.toLowerCase();
+    var isCommon = COMMON_PASSWORDS.indexOf(lower) !== -1;
+
+    var hasSequence = false;
+    for (var s = 0; s < SEQUENCES.length; s++){
+      var seq = SEQUENCES[s];
+      var rev = seq.split('').reverse().join('');
+      for (var i = 0; i <= seq.length - 4; i++){
+        var chunk = seq.slice(i, i+4);
+        var chunkRev = rev.slice(i, i+4);
+        if (lower.indexOf(chunk) !== -1 || lower.indexOf(chunkRev) !== -1){ hasSequence = true; }
+      }
+    }
+
+    var hasRepeat = /(.)\1{2,}/.test(password);
+
+    if (isCommon) entropy = Math.min(entropy, 8);
+    if (hasSequence) entropy -= 8;
+    if (hasRepeat) entropy -= 6;
+    entropy = Math.max(entropy, 0);
+
+    var checks = [
+      { label: "At least 12 characters", pass: length >= 12 },
+      { label: "Lowercase letters", pass: hasLower },
+      { label: "Uppercase letters", pass: hasUpper },
+      { label: "Numbers", pass: hasDigit },
+      { label: "Symbols", pass: hasSymbol },
+      { label: "Not a known common password", pass: !isCommon },
+      { label: "No keyboard sequences (qwerty, 1234…)", pass: !hasSequence },
+      { label: "No 3+ repeated characters in a row", pass: !hasRepeat }
+    ];
+
+    var category, color;
+    if (entropy < 28) { category = "Very weak"; color = "var(--rust)"; }
+    else if (entropy < 40) { category = "Weak"; color = "var(--rust)"; }
+    else if (entropy < 60) { category = "Fair"; color = "var(--brass)"; }
+    else if (entropy < 80) { category = "Strong"; color = "var(--verdigris)"; }
+    else { category = "Very strong"; color = "var(--verdigris)"; }
+
+    var guesses = Math.pow(2, entropy) / 2;
+    var seconds = guesses / 1e10;
+    var crackTimeStr = formatDuration(seconds);
+
+    return {
+      length: length, pool: pool, entropy: entropy, checks: checks,
+      category: category, color: color, crackTimeStr: crackTimeStr, isCommon: isCommon
+    };
+  }
+
+  function formatDuration(seconds){
+    if (seconds < 1) return "instantly";
+    var units = [
+      { label: "second", secs: 1 },
+      { label: "minute", secs: 60 },
+      { label: "hour", secs: 3600 },
+      { label: "day", secs: 86400 },
+      { label: "year", secs: 31557600 },
+      { label: "century", secs: 3155760000 }
+    ];
+    var chosen = units[0];
+    for (var i = 0; i < units.length; i++){
+      if (seconds >= units[i].secs) chosen = units[i];
+    }
+    var value = seconds / chosen.secs;
+    if (value > 1e6) return "longer than the age of the universe";
+    var rounded = value >= 100 ? Math.round(value).toLocaleString() : (Math.round(value * 10) / 10);
+    return rounded + " " + chosen.label + (rounded === 1 ? "" : "s");
+  }
+
+  var pwInput = document.getElementById('pw');
+  var toggleVis = document.getElementById('toggleVis');
+  var needle = document.getElementById('needle');
+  var dialFill = document.getElementById('dialFill');
+  var verdictEl = document.getElementById('verdict');
+  var crackTimeEl = document.getElementById('crackTime');
+  var checklistEl = document.getElementById('checklist');
+  var poolSizeEl = document.getElementById('poolSize');
+  var entropyBitsEl = document.getElementById('entropyBits');
+  var reuseWarningEl = document.getElementById('reuseWarning');
+  var vaultStatusEl = document.getElementById('vaultStatus');
+  var vaultCountEl = document.getElementById('vaultCount');
+
+  var vaultHashes = [];
+
+  function loadVault(){
+    if (!window.storage) return Promise.resolve();
+    return window.storage.get('vault-hashes', false).then(function(res){
+      if (res && res.value) {
+        try { vaultHashes = JSON.parse(res.value); } catch(e){ vaultHashes = []; }
+      }
+      vaultCountEl.textContent = vaultHashes.length;
+    }).catch(function(){ vaultHashes = []; });
+  }
+
+  function saveVault(){
+    if (!window.storage) return Promise.resolve();
+    return window.storage.set('vault-hashes', JSON.stringify(vaultHashes), false).catch(function(){});
+  }
+
+  function renderChecklist(checks){
+    checklistEl.innerHTML = "";
+    checks.forEach(function(c){
+      var row = document.createElement('div');
+      row.className = 'stamp-row';
+      var label = document.createElement('p');
+      label.className = 'label';
+      label.textContent = c.label;
+      var stamp = document.createElement('span');
+      stamp.className = 'stamp ' + (c.pass ? 'pass' : 'fail');
+      stamp.textContent = c.pass ? 'PASS' : 'FAIL';
+      row.appendChild(label);
+      row.appendChild(stamp);
+      checklistEl.appendChild(row);
+    });
+  }
+
+  function updateDial(entropy){
+    var clamped = Math.max(0, Math.min(entropy, 100));
+    var pct = clamped / 100;
+    var angleDeg = -90 + pct * 180;
+    needle.style.transform = "rotate(" + angleDeg + "deg)";
+    var circumference = Math.PI * 95;
+    dialFill.setAttribute('stroke-dasharray', (pct * circumference) + " " + circumference);
+    var color = clamped < 28 ? 'var(--rust)' : (clamped < 60 ? 'var(--brass)' : 'var(--verdigris)');
+    dialFill.setAttribute('stroke', color);
+  }
+
+  var debounceTimer = null;
+
+  function runAnalysis(){
+    var password = pwInput.value;
+    if (!password){
+      verdictEl.textContent = "Awaiting input";
+      verdictEl.style.color = "var(--paper-dim)";
+      crackTimeEl.textContent = "Type a password above to begin.";
+      checklistEl.innerHTML = "";
+      poolSizeEl.textContent = "0";
+      entropyBitsEl.textContent = "0 bits";
+      updateDial(0);
+      reuseWarningEl.style.display = "none";
+      return;
+    }
+    var result = analyze(password);
+    verdictEl.textContent = result.category;
+    verdictEl.style.color = result.color;
+    crackTimeEl.innerHTML = "Estimated crack time: <strong>" + result.crackTimeStr + "</strong>";
+    renderChecklist(result.checks);
+    poolSizeEl.textContent = result.pool + " chars";
+    entropyBitsEl.textContent = Math.round(result.entropy * 10) / 10 + " bits";
+    updateDial(result.entropy);
+
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(function(){
+      sha256Hex(password).then(function(hash){
+        if (vaultHashes.indexOf(hash) !== -1){
+          reuseWarningEl.style.display = "block";
+          reuseWarningEl.textContent = "This matches a password you've marked as used before on this device.";
+        } else {
+          reuseWarningEl.style.display = "none";
+        }
+      });
+    }, 150);
+  }
+
+  pwInput.addEventListener('input', runAnalysis);
+
+  toggleVis.addEventListener('click', function(){
+    if (pwInput.type === 'password'){
+      pwInput.type = 'text';
+      toggleVis.textContent = 'Hide';
+    } else {
+      pwInput.type = 'password';
+      toggleVis.textContent = 'Show';
+    }
+  });
+
+  document.getElementById('rememberBtn').addEventListener('click', function(){
+    var password = pwInput.value;
+    if (!password){
+      vaultStatusEl.textContent = "Nothing to remember yet — type a password first.";
+      return;
+    }
+    sha256Hex(password).then(function(hash){
+      if (vaultHashes.indexOf(hash) === -1){
+        vaultHashes.unshift(hash);
+        if (vaultHashes.length > 20) vaultHashes = vaultHashes.slice(0, 20);
+        saveVault().then(function(){
+          vaultCountEl.textContent = vaultHashes.length;
+          vaultStatusEl.textContent = "Stored as hash " + hash.slice(0, 12) + "… — reuse of this password will now be flagged.";
+        });
+      } else {
+        vaultStatusEl.textContent = "Already in the vault.";
+      }
+    });
+  });
+
+  document.getElementById('clearVaultBtn').addEventListener('click', function(){
+    vaultHashes = [];
+    saveVault().then(function(){
+      vaultCountEl.textContent = "0";
+      vaultStatusEl.textContent = "Vault cleared.";
+      reuseWarningEl.style.display = "none";
+    });
+  });
+
+  function generateRandomPassword(len){
+    var upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+    var lower = "abcdefghijkmnopqrstuvwxyz";
+    var digits = "23456789";
+    var symbols = "!@#$%^&*-_=+?";
+    var all = upper + lower + digits + symbols;
+    var required = [upper, lower, digits, symbols];
+    var chars = [];
+    required.forEach(function(set){ chars.push(set[secureRandomInt(set.length)]); });
+    for (var i = chars.length; i < len; i++){
+      chars.push(all[secureRandomInt(all.length)]);
+    }
+    for (var i = chars.length - 1; i > 0; i--){
+      var j = secureRandomInt(i + 1);
+      var tmp = chars[i]; chars[i] = chars[j]; chars[j] = tmp;
+    }
+    return chars.join('');
+  }
+
+  function generatePassphrase(wordCount){
+    var words = [];
+    for (var i = 0; i < wordCount; i++){
+      words.push(WORDLIST[secureRandomInt(WORDLIST.length)]);
+    }
+    var digit = secureRandomInt(10);
+    var symbols = "!@#$%*";
+    var symbol = symbols[secureRandomInt(symbols.length)];
+    words[secureRandomInt(words.length)] = words[secureRandomInt(words.length)] + digit;
+    return words.map(function(w, idx){
+      return idx === 0 ? w.charAt(0).toUpperCase() + w.slice(1) : w;
+    }).join('-') + symbol;
+  }
+
+  function renderSuggestion(label, value){
+    var result = analyze(value);
+    var card = document.createElement('div');
+    card.className = 'suggestion-card';
+    var tag = document.createElement('div');
+    tag.className = 'tag';
+    tag.textContent = label;
+    var val = document.createElement('div');
+    val.className = 'suggestion-value';
+    val.textContent = value;
+    var meta = document.createElement('div');
+    meta.className = 'suggestion-meta';
+    meta.textContent = result.category + " — " + (Math.round(result.entropy * 10) / 10) + " bits — crack time " + result.crackTimeStr;
+    var copyBtn = document.createElement('button');
+    copyBtn.className = 'copy-btn';
+    copyBtn.textContent = 'Copy';
+    copyBtn.addEventListener('click', function(){
+      navigator.clipboard.writeText(value).then(function(){
+        copyBtn.textContent = 'Copied';
+        setTimeout(function(){ copyBtn.textContent = 'Copy'; }, 1500);
+      }).catch(function(){});
+    });
+    card.appendChild(tag);
+    card.appendChild(val);
+    card.appendChild(meta);
+    card.appendChild(copyBtn);
+    document.getElementById('suggestionsList').prepend(card);
+  }
+
+  document.getElementById('genRandom').addEventListener('click', function(){
+    renderSuggestion('Random, 16 characters', generateRandomPassword(16));
+  });
+
+  document.getElementById('genPassphrase').addEventListener('click', function(){
+    renderSuggestion('Passphrase, 5 words', generatePassphrase(5));
+  });
+
+  loadVault().then(runAnalysis);
+
+})();
+</script>
+</body>
+</html>
